@@ -1,0 +1,7 @@
+domain: earthnet.ch
+layout:
+- go.kubebuilder.io/v3
+projectName: test
+repo: git.earthnet.ch/simon.beck/kopia-k8s
+resources:
+version: "3"
