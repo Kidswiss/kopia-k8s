@@ -13,7 +13,7 @@ The command found in the pre-backup command annotation will be run sequentially 
 
 Once the pre-backup commands have finished, it will start to spawn the actual backup jobs within k8s. By default, it spawns 3 parallel jobs. Each of those jobs has pod-affinity rules, so that it's scheduled on the same host as the running pod. This ensures that the backup jobs can read the data from the same `RWO` PVCs. If Kopia encounters a critical error, it will exit with a non-zero exit code, thus failing the entire job. So Kopia-k8s jobs can be monitored by simply monitoring for failed jobs on the cluster.
 
-## Todos
-Some todos:
-* Currently two parallel `kopia-k8s operator backup` instances could clash, because the spawned jobs don't have randomized names
-* Maybe add some metrics, for example if there were some non-critical errors (e.g. a file could not be read)
+## To-dos
+Some to-dos:
+- [x] Currently two parallel `kopia-k8s operator backup` instances could clash, because the spawned jobs don't have randomized names
+- [ ] Maybe add some metrics, for example if there were some non-critical errors (e.g. a file could not be read)
