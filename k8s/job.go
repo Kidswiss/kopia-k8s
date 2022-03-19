@@ -3,6 +3,7 @@ package k8s
 import (
 	"fmt"
 	"path"
+	"strings"
 
 	"git.earthnet.ch/simon.beck/kopia-k8s/logger"
 	"github.com/urfave/cli/v2"
@@ -62,7 +63,8 @@ func (j *JobRunner) RunAndWatchBackupJobs() error {
 }
 
 func (j *JobRunner) generateJobName(podname, pvcname string) string {
-	name := fmt.Sprintf("kopia-%s-%s", podname, pvcname)
+	seed := strings.Split(j.CliCtx.String("uuid"), "-")[0]
+	name := fmt.Sprintf("kopia-%s-%s-%s", seed, podname, pvcname)
 	if len(name) > 63 {
 		name = name[:63]
 	}
