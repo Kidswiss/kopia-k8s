@@ -6,6 +6,8 @@ import (
 	"git.earthnet.ch/simon.beck/kopia-k8s/logger"
 	"github.com/urfave/cli/v2"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/selection"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
@@ -20,7 +22,13 @@ import (
 // listPodsWithPVCs returns a list with pods that have a PVC mounted.
 func listPodsWithPVCs(cliCtx *cli.Context, k8sClient client.Client) (*v1.PodList, error) {
 	tmp := &v1.PodList{}
-	err := k8sClient.List(cliCtx.Context, tmp)
+
+	selector, err := createLabelSelector()
+	if err != nil {
+		return nil, err
+	}
+
+	err = k8sClient.List(cliCtx.Context, tmp, &client.ListOptions{LabelSelector: selector})
 
 	pods := &v1.PodList{}
 	for _, pod := range tmp.Items {
@@ -33,6 +41,18 @@ func listPodsWithPVCs(cliCtx *cli.Context, k8sClient client.Client) (*v1.PodList
 	}
 
 	return pods, err
+}
+
+func createLabelSelector() (labels.Selector, error) {
+	podReq, err := labels.NewRequirement(JobLabel, selection.DoesNotExist, []string{})
+
+	if err != nil {
+		return nil, err
+	}
+
+	selector := labels.NewSelector()
+	selector.Add(*podReq)
+	return selector, err
 }
 
 func listPodsWithPrebackupAnnotation(cliCtx *cli.Context, k8sClient client.Client) (*v1.PodList, error) {
