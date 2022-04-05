@@ -112,6 +112,11 @@ func (j JobRunner) newBackupJob(pvc *v1.PersistentVolumeClaim, pod *v1.Pod) *bat
 		},
 		Spec: batchv1.JobSpec{
 			Template: v1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: map[string]string{
+						JobLabel: j.CliCtx.String("uuid"),
+					},
+				},
 				Spec: v1.PodSpec{
 					ServiceAccountName: "kopia-k8s",
 					Affinity: &v1.Affinity{
