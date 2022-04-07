@@ -16,31 +16,11 @@ func newKopiaCommand() *cli.Command {
 			newKopiaBackupCommand(),
 			newKopiaMaintenanceCommand(),
 		},
-		Flags: append([]cli.Flag{
-			&cli.PathFlag{
-				Name:    "config",
-				Aliases: []string{"c"},
-				Usage:   "Path to the folder where the config should be written",
-				EnvVars: envVars("CONFIG_PATH"),
-				Value:   "/tmp",
-			},
-			&cli.PathFlag{
-				Name:    "kopia-bin-path",
-				Usage:   "Kopia binary path",
-				EnvVars: envVars("KOPIA_PATH"),
-				Value:   "/usr/local/bin/kopia",
-			},
-			&cli.PathFlag{
-				Name:    "cache-path",
-				Usage:   "Path where the cache is stored",
-				EnvVars: envVars("KOPIA_CACHE_PATH"),
-				Value:   "/cache",
-			},
-		}, getRepositoryParams()...),
+		Flags: getKopiaParams(),
 	}
 }
 
-func getRepositoryParams() []cli.Flag {
+func getKopiaParams() []cli.Flag {
 	return []cli.Flag{
 		&cli.StringFlag{
 			Name:    "access-key-id",
@@ -66,6 +46,25 @@ func getRepositoryParams() []cli.Flag {
 			Name:    "s3-endpoint",
 			Usage:   "Kopia S3 endpoint",
 			EnvVars: envVars("ENDPOINT"),
+		},
+		&cli.PathFlag{
+			Name:    "config",
+			Aliases: []string{"c"},
+			Usage:   "Path to the folder where the config should be written",
+			EnvVars: envVars("CONFIG_PATH"),
+			Value:   "/tmp",
+		},
+		&cli.PathFlag{
+			Name:    "kopia-bin-path",
+			Usage:   "Kopia binary path",
+			EnvVars: envVars("KOPIA_PATH"),
+			Value:   "/usr/local/bin/kopia",
+		},
+		&cli.PathFlag{
+			Name:    "cache-path",
+			Usage:   "Path where the cache is stored",
+			EnvVars: envVars("KOPIA_CACHE_PATH"),
+			Value:   "/cache",
 		},
 	}
 }

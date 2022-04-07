@@ -32,7 +32,7 @@ func newOperatorBackupCommand() *cli.Command {
 				Usage:   "Random ID for jobs, so that each kopia-k8s instance can operate on their own jobs",
 				EnvVars: envVars("UUID"),
 			},
-		}, getRepositoryParams()...),
+		}, getKopiaParams()...),
 	}
 }
 
