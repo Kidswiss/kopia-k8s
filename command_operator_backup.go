@@ -62,5 +62,10 @@ func runOperatorBackup(c *cli.Context) error {
 		return err
 	}
 
-	return jobRunner.RunAndWatchBackupJobs()
+	err = jobRunner.RunAndWatchBackupJobs()
+	if err != nil {
+		return err
+	}
+
+	return runMaintenance(c)
 }

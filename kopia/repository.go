@@ -33,24 +33,24 @@ type caching struct {
 	MaxListCacheDuration int    `json:"maxListCacheDuration"`
 }
 
-func newRepositoryConfigFile(bucket, endpoint, accessKeyID, secretAccessKey, hostname string) repository {
+func (k *Kopia) newRepositoryConfigFile() repository {
 	return repository{
 		Storage: storage{
 			Type: "s3",
 			Config: config{
-				Bucket:          bucket,
-				Endpoint:        endpoint,
-				AccessKeyID:     accessKeyID,
-				SecretAccessKey: secretAccessKey,
+				Bucket:          k.bucket,
+				Endpoint:        k.endpoint,
+				AccessKeyID:     k.accessKeyID,
+				SecretAccessKey: k.secretAccessKey,
 			},
 		},
 		Caching: caching{
-			CacheDirectory:       "/cache",
+			CacheDirectory:       k.cachePath,
 			MaxCacheSize:         5242880000,
 			MaxMetadataCacheSize: 5242880000,
 			MaxListCacheDuration: 30,
 		},
-		Hostname:                hostname,
+		Hostname:                k.hostname,
 		Username:                "kopia-k8s",
 		Description:             "Repository in S3: restic.earthnet.ch kopia",
 		EnableActions:           false,
@@ -59,7 +59,7 @@ func newRepositoryConfigFile(bucket, endpoint, accessKeyID, secretAccessKey, hos
 }
 
 func (k *Kopia) writeConfigFile() {
-	repo := newRepositoryConfigFile(k.bucket, k.endpoint, k.accessKeyID, k.secretAccessKey, k.hostname)
+	repo := k.newRepositoryConfigFile()
 
 	repoBytes, err := json.Marshal(repo)
 	if err != nil {
