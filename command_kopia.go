@@ -14,6 +14,7 @@ func newKopiaCommand() *cli.Command {
 		Usage: "Runs kopia commands",
 		Subcommands: []*cli.Command{
 			newKopiaBackupCommand(),
+			newKopiaMaintenanceCommand(),
 		},
 		Flags: append([]cli.Flag{
 			&cli.PathFlag{
@@ -23,11 +24,17 @@ func newKopiaCommand() *cli.Command {
 				EnvVars: envVars("CONFIG_PATH"),
 				Value:   "/tmp",
 			},
-			&cli.StringFlag{
+			&cli.PathFlag{
 				Name:    "kopia-bin-path",
 				Usage:   "Kopia binary path",
 				EnvVars: envVars("KOPIA_PATH"),
 				Value:   "/usr/local/bin/kopia",
+			},
+			&cli.PathFlag{
+				Name:    "cache-path",
+				Usage:   "Path where the cache is stored",
+				EnvVars: envVars("KOPIA_CACHE_PATH"),
+				Value:   "/cache",
 			},
 		}, getRepositoryParams()...),
 	}
@@ -76,6 +83,7 @@ func newKopiaInstance(c *cli.Context) *kopia.Kopia {
 		c.String("encryption-password"),
 		c.String("s3-endpoint"),
 		c.String("bucket"),
-		c.String("kopia-bin-path"),
-		c.String("hostname"))
+		c.Path("kopia-bin-path"),
+		c.String("hostname"),
+		c.Path("cache-path"))
 }

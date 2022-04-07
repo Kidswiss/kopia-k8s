@@ -33,7 +33,7 @@ func listPodsWithPVCs(cliCtx *cli.Context, k8sClient client.Client) (*v1.PodList
 	pods := &v1.PodList{}
 	for _, pod := range tmp.Items {
 		for _, volume := range pod.Spec.Volumes {
-			if volume.PersistentVolumeClaim != nil {
+			if volume.PersistentVolumeClaim != nil && pod.Status.Phase == v1.PodRunning {
 				pods.Items = append(pods.Items, pod)
 				break
 			}
