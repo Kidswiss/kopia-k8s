@@ -15,7 +15,7 @@ func newKopiaMaintenanceCommand() *cli.Command {
 		Name:   "maintenance",
 		Usage:  "Runs the maintenance on the given repository",
 		Action: runMaintenance,
-		Flags:  getRepositoryParams(),
+		Flags:  getKopiaParams(),
 	}
 }
 
