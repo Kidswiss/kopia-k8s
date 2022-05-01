@@ -9,6 +9,7 @@ import (
 	"github.com/urfave/cli/v2"
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -48,7 +49,7 @@ func (j *JobRunner) RunAndWatchBackupJobs() error {
 		createServiceAccount(*j.CliCtx, j.K8sClient, pvc.Pod.Namespace)
 		job := j.newBackupJob(pvc.PVC, pvc.Pod)
 		err := j.K8sClient.Create(j.CliCtx.Context, job)
-		if err != nil {
+		if err != nil && !errors.IsAlreadyExists(err) {
 			return err
 		}
 		mountedJobCount++
