@@ -14,8 +14,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// FinishedJobChannel informs RunAndWatchBackupJobs about what jobs
-// have already finished.
+// FinishedJobChannel gets notified when a jobb finishes.
 var FinishedJobChannel chan bool = make(chan bool)
 
 // JobRunner contains all necessary information to run the backup jobs.
@@ -26,8 +25,12 @@ type JobRunner struct {
 	PvcList     *BackupPVCList
 }
 
-// JobLabel defines the label that should be used for the jobs
-const JobLabel = "kopia.earthnet.ch"
+const (
+	// JobLabel defines the label that should be used for the jobs
+	JobLabel = "kopia.earthnet.ch"
+	//ContainerName defines the name of the kopia container within the pod
+	ContainerName = "kopia-backup"
+)
 
 // RunAndWatchBackupJobs will start all the jobs for the given PVC list.
 // It will block until all the jobs have either finished or failed.
@@ -134,7 +137,7 @@ func (j JobRunner) newBackupJob(pvc *v1.PersistentVolumeClaim, pod *v1.Pod) *bat
 					},
 					Containers: []v1.Container{
 						{
-							Name:  "kopia-backup",
+							Name:  ContainerName,
 							Image: "192.168.6.10:5000/kopia-k8s:latest",
 							Args: []string{
 								"kopia",

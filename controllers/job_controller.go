@@ -2,12 +2,16 @@ package controllers
 
 import (
 	"context"
+	"time"
 
 	"git.earthnet.ch/simon.beck/kopia-k8s/k8s"
 	"github.com/go-logr/logr"
 	batchv1 "k8s.io/api/batch/v1"
+	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/selection"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -25,17 +29,17 @@ type JobReconciler struct {
 
 // Reconcile is the entrypoint to manage the given resource.
 func (r *JobReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-
-	r.Log.V(1).Info("watched job", "name", req.Name)
-
 	myJob := &batchv1.Job{}
 
-	r.Client.Get(ctx, req.NamespacedName, myJob)
+	err := r.Client.Get(ctx, req.NamespacedName, myJob)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
 
-	r.Log.V(1).Info("job status", "status", myJob.Status)
+	r.Log.V(1).Info("watched job", "name", req.Name, "status", myJob.Status)
 
-	if myJob.ObjectMeta.Labels[k8s.JobLabel] == r.uuid {
-		if myJob.Status.Succeeded > 0 && myJob.DeletionTimestamp == nil {
+	if myJob.ObjectMeta.Labels[k8s.JobLabel] == r.uuid && myJob.DeletionTimestamp == nil {
+		if myJob.Status.Succeeded > 0 {
 			backgroundDelete := v1.DeletePropagationBackground
 			err := r.Client.Delete(ctx, myJob, &client.DeleteOptions{PropagationPolicy: &backgroundDelete})
 			if err != nil {
@@ -45,13 +49,51 @@ func (r *JobReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.R
 			}
 			k8s.FinishedJobChannel <- true
 		}
-		if myJob.Status.Failed > 0 && myJob.DeletionTimestamp == nil {
+		if myJob.Status.Failed > 0 {
 			r.Log.Error(nil, "job failed, not cleaning up", "name", myJob.Name)
 			k8s.FinishedJobChannel <- true
 		}
+		if myJob.Status.Active > 0 {
+			if r.isJobPodPending(ctx, myJob) {
+				if time.Now().Sub(myJob.CreationTimestamp.Time).Minutes() > 5 {
+					r.Log.Info("pod has been pending for over 5 minutes, skipping and starting next pod", "name", myJob.Name, "namespace", myJob.Namespace)
+					k8s.FinishedJobChannel <- true
+				}
+			}
+		}
 	}
 
-	return ctrl.Result{}, nil
+	return ctrl.Result{RequeueAfter: time.Minute * 1}, nil
+}
+
+func (r *JobReconciler) isJobPodPending(ctx context.Context, myJob *batchv1.Job) bool {
+	podList := &corev1.PodList{}
+
+	labelSelector, _ := createLabelSelector(myJob.Labels[k8s.JobLabel])
+
+	err := r.Client.List(ctx, podList, &client.ListOptions{LabelSelector: labelSelector})
+	if err != nil {
+		r.Log.Error(err, "could not list pod to determine pending state", "name", myJob.Name, "namespace", myJob.Namespace)
+		return false
+	}
+
+	if len(podList.Items) == 1 {
+		return podList.Items[0].Status.Phase == corev1.PodPending
+	}
+
+	return false
+}
+
+func createLabelSelector(podID string) (labels.Selector, error) {
+	podReq, err := labels.NewRequirement(k8s.JobLabel, selection.In, []string{podID})
+
+	if err != nil {
+		return nil, err
+	}
+
+	selector := labels.NewSelector()
+	selector.Add(*podReq)
+	return selector, err
 }
 
 // SetupWithManager configures the reconciler.
