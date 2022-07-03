@@ -58,8 +58,8 @@ func (r *JobReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.R
 			k8s.FinishedJobChannel <- true
 		}
 		if myJob.Status.Active > 0 {
-			if r.isJobPodPending(ctx, myJob) {
-				if time.Now().Sub(myJob.CreationTimestamp.Time).Minutes() > 5 {
+			if time.Now().Sub(myJob.CreationTimestamp.Time).Minutes() > 15 {
+				if r.isJobPodPending(ctx, myJob) {
 					r.Log.Info("pod has been pending for over 5 minutes, skipping and starting next pod", "name", myJob.Name, "namespace", myJob.Namespace)
 					k8s.FinishedJobChannel <- true
 				}
@@ -73,7 +73,7 @@ func (r *JobReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.R
 func (r *JobReconciler) isJobPodPending(ctx context.Context, myJob *batchv1.Job) bool {
 	podList := &corev1.PodList{}
 
-	labelSelector, _ := createLabelSelector(myJob.Labels[k8s.JobLabel])
+	labelSelector, _ := createLabelSelector(myJob.Name)
 
 	err := r.Client.List(ctx, podList, &client.ListOptions{LabelSelector: labelSelector})
 	if err != nil {
@@ -88,15 +88,14 @@ func (r *JobReconciler) isJobPodPending(ctx context.Context, myJob *batchv1.Job)
 	return false
 }
 
-func createLabelSelector(podID string) (labels.Selector, error) {
-	podReq, err := labels.NewRequirement(k8s.JobLabel, selection.In, []string{podID})
+func createLabelSelector(jobName string) (labels.Selector, error) {
+	podReq, err := labels.NewRequirement("job-name", selection.In, []string{jobName})
 
 	if err != nil {
 		return nil, err
 	}
 
-	selector := labels.NewSelector()
-	selector.Add(*podReq)
+	selector := labels.NewSelector().Add(*podReq)
 	return selector, err
 }
 
