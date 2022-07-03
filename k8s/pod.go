@@ -50,8 +50,7 @@ func createLabelSelector() (labels.Selector, error) {
 		return nil, err
 	}
 
-	selector := labels.NewSelector()
-	selector.Add(*podReq)
+	selector := labels.NewSelector().Add(*podReq)
 	return selector, err
 }
 
