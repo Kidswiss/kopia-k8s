@@ -1,6 +1,6 @@
 FROM golang:1.17 as build
 ENV CGO_ENABLED=0
-ENV KOPIA_VERSION=0.12.1
+ENV KOPIA_VERSION=0.13.0
 
 WORKDIR /kopia-k8s
 RUN wget "https://github.com/kopia/kopia/releases/download/v${KOPIA_VERSION}/kopia-${KOPIA_VERSION}-linux-x64.tar.gz" && \
