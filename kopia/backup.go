@@ -7,6 +7,7 @@ func (k *Kopia) Backup(backupPath string) error {
 
 	return k.runKopiaCommand("backup", []string{
 		"snapshot",
+		"create",
 		"--json",
 		backupPath,
 	})
