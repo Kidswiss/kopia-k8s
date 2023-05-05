@@ -10,7 +10,7 @@ RUN VERSION=$(git describe --tags --always) && \
     go build -v -a -ldflags "-X main.version=$VERSION"
 
 FROM alpine
-ENV KOPIA_VERSION=0.12.1
+ENV KOPIA_VERSION=0.13.0
 RUN apk --no-cache add ca-certificates
 COPY --from=build /kopia-k8s/kopia-k8s /kopia-k8s
 COPY --from=build /kopia-k8s/kopia-${KOPIA_VERSION}-linux-x64 /usr/local/bin
